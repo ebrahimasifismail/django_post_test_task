@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import PostImageSerializer, DislikeSerializer, LikeSerializer, PostSerializer, TagSerializer
 from .models import PostImage, Dislike, Like, Post, Tag, UserPostWeight
 
-
+from django.db.models import Prefetch, Count
 # Create your views here.
 
 class HomePageView(View):
@@ -132,14 +132,10 @@ class PostList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         liked_posts = Like.objects.filter(user=self.request.user)
-        disliked_posts = Dislike.objects.filter(user=self.request.user)
-        if disliked_posts:
-            disliked_tags = list()
-            for dislikes in disliked_posts:
-                disliked_tag = dislikes.tags.all()
-                for disliked in disliked_tags:
-                    if not disliked in disliked_tags:
-                        disliked_tags.append(disliked)
+        disliked = Dislike.objects.filter(user=self.request.user)
+        if disliked:
+            disliked_posts = Post.objects.filter(dislike__in=disliked)
+            disliked_tags = Tag.objects.filter(tagssss__in=disliked_posts)
             excluded_posts =  list(Post.objects.exclude(tags__in=disliked_tags).distinct())
         else:
             excluded_posts = list(Post.objects.all())
